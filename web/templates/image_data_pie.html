@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pie Chart Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-bar {
+            position: relative;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .chart-container {
+            width: 100%; /* Full width of the container */
+            display: flex;
+            justify-content: center; /* Center the content horizontally */
+            padding: 20px;
+        }
+
+        canvas {
+            width: 400px; /* Fixed width */
+            height: 400px; /* Fixed height */
+        }
+    </style>
+</head>
+<body>
+<div class="top-bar">
+    <button class="back-button" onclick="window.location.href='/'">返回主页面</button>
+    <select id="groupSelect" class="group-select" onchange="updateChart()">
+        <option>Loading data...</option>
+    </select>
+</div>
+<div class="chart-container">
+    <canvas id="myPieChart"></canvas>
+</div>
+<script>
+    // const data = [
+    //   {
+    //       "group_id": 0,
+    //       "group_index": 1,
+    //       "start_time": "2024-12-21 13:53:51.363183",
+    //       "type": "unhappy"
+    //   },
+    //   {
+    //       "group_id": 0,
+    //       "group_index": 2,
+    //       "start_time": "2024-12-21 13:58:35.459394",
+    //       "type": "happy"
+    //   },
+    //   {
+    //       "group_id": 1,
+    //       "group_index": 1,
+    //       "start_time": "2024-12-21 14:00:00.000000",
+    //       "type": "neutral"
+    //   },
+    //   {
+    //       "group_id": 1,
+    //       "group_index": 2,
+    //       "start_time": "2024-12-21 14:05:00.000000",
+    //       "type": "excited"
+    //   }
+    // ];
+    const data = JSON.parse('{{ data }}');
+    const groupSelect = document.getElementById('groupSelect');
+    const ctx = document.getElementById('myPieChart').getContext('2d');
+    let myPieChart = null;
+
+    function initSelect() {
+        const groups = [...new Set(data.map(item => item.group_id))];
+        groupSelect.innerHTML = '';
+        if (groups.length > 0) {
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group;
+                option.textContent = `Group ${group}`;
+                groupSelect.appendChild(option);
+            });
+            groupSelect.disabled = false;
+            updateChart();
+        } else {
+            const option = document.createElement('option');
+            option.textContent = 'No data available';
+            groupSelect.appendChild(option);
+            groupSelect.disabled = true;
+        }
+    }
+
+    function generateColorPalette(count) {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+            const red = Math.floor(Math.random() * 255);
+            const green = Math.floor(Math.random() * 255);
+            const blue = Math.floor(Math.random() * 255);
+            colors.push(`rgb(${red}, ${green}, ${blue})`);
+        }
+        return colors;
+    }
+
+    function updateChart() {
+        const selectedGroup = parseInt(groupSelect.value);
+        const filteredData = data.filter(item => item.group_id === selectedGroup);
+        const typeCounts = filteredData.reduce((acc, item) => {
+            acc[item.type] = (acc[item.type] || 0) + 1;
+            return acc;
+        }, {});
+
+        const types = Object.keys(typeCounts);
+        const colors = generateColorPalette(types.length);
+
+        const chartData = {
+            labels: types,
+            datasets: [{
+                label: 'Number of Types',
+                data: Object.values(typeCounts),
+                backgroundColor: colors
+            }]
+        };
+
+        if (myPieChart) {
+            myPieChart.destroy();
+        }
+
+        myPieChart = new Chart(ctx, {
+            type: 'pie',
+            data: chartData,
+            options: {
+                responsive: false, // Disable responsiveness
+                maintainAspectRatio: true
+            }
+        });
+    }
+
+    initSelect();
+</script>
+</body>
+</html>
