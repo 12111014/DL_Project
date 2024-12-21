@@ -11,6 +11,9 @@
             margin: 0;
             display: flex;
             flex-direction: column;
+            background: linear-gradient(270deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Arial', sans-serif;
+            color: #fff;
         }
 
         .top-bar {
@@ -22,18 +25,36 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
         .chart-container {
-            width: 100%; /* Full width of the container */
+            /*width: 100%; !* Full width of the container *!*/
             display: flex;
             justify-content: center; /* Center the content horizontally */
             padding: 20px;
+            /*flex-grow: 1; !* Allows container to grow and fill available space *!*/
         }
 
         canvas {
-            width: 400px; /* Fixed width */
-            height: 400px; /* Fixed height */
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        button, select {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            background-image: linear-gradient(to right, #0072ff, #00c6ff);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover, select:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
         }
     </style>
 </head>
@@ -79,6 +100,8 @@
     const ctx = document.getElementById('myPieChart').getContext('2d');
     let myPieChart = null;
 
+    initSelect();
+
     function initSelect() {
         const groups = [...new Set(data.map(item => item.group_id))];
         groupSelect.innerHTML = '';
@@ -102,9 +125,9 @@
     function generateColorPalette(count) {
         const colors = [];
         for (let i = 0; i < count; i++) {
-            const red = Math.floor(Math.random() * 255);
-            const green = Math.floor(Math.random() * 255);
-            const blue = Math.floor(Math.random() * 255);
+            const red = Math.floor(Math.random() * 256);
+            const green = Math.floor(Math.random() * 256);
+            const blue = Math.floor(Math.random() * 256);
             colors.push(`rgb(${red}, ${green}, ${blue})`);
         }
         return colors;
@@ -143,8 +166,6 @@
             }
         });
     }
-
-    initSelect();
 </script>
 </body>
 </html>

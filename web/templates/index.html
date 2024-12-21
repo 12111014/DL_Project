@@ -1,13 +1,66 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <title>实时情绪检测</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(270deg, #0f0c29, #302b63, #24243e, #6b0f1a, #b91372, #505bda, #24243e);
+            background-size: 1200% 1200%;
+            animation: AnimatedGradient 10s ease infinite;
+            font-family: Arial, sans-serif;
+        }
+
+        @keyframes AnimatedGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #fff;
+            text-shadow: #fadfbb 0 0 5px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-image: linear-gradient(to right, #0072ff, #00c6ff);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .button-container {
+            display: flex;
+            gap: 20px;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>选择功能</h1>
-<!--    <button onclick="window.location.href='image_show'">实时情绪检测</button>-->
-    <button onclick="window.location.href='image_data_timeline'">时间轴展示</button>
-    <button onclick="window.location.href='image_data_pie'">数据统计展示</button>
+    <div class="button-container">
+        <h1>数据展示</h1>
+        <button onclick="window.location.href='image_data_timeline'">时间轴展示</button>
+        <button onclick="window.location.href='image_data_pie'">饼状图展示</button>
+    </div>
 </body>
 </html>

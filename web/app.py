@@ -1,6 +1,6 @@
 import json
 
-from flask import Flask, request, send_file, render_template
+from flask import Flask, request, send_file, render_template, jsonify
 from matplotlib import pyplot as plt
 from markupsafe import Markup
 import pandas as pd
@@ -39,9 +39,52 @@ def upload_image_data():
     # 获取 JSON 数据
     data = request.form.to_dict()
     # 保存图片信息
-    save_data(data)
+    print(data)
+    st = datetime.now()
+    image_info = ImageInfo(group_id=data["group_id"],
+                           group_index=data["group_index"],
+                           start_time=data["start_time"] if "start_time" in data else st,
+                           type=data["type"])
+    db.session.add(image_info)
+    db.session.commit()
     return "Image uploaded successfully!"
 
+def find_unique_group_id():
+    max_group_id = db.session.query(db.func.max(ImageInfo.group_id)).scalar()
+    if max_group_id is None:
+        return 0
+    else:
+        return max_group_id + 1
+
+@app.route("/upload_group_image_data", methods=["POST"])
+def upload_group_image_data():
+    # 确认请求中有 JSON 数据
+    if request.is_json:
+        # 获取 JSON 数据
+        data = request.get_json()
+        data = json.loads(data)
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict) and {'group_index', 'type', 'start_time'} <= item.keys():
+                    try:
+                        item['start_time'] = datetime.strptime(item['start_time'], '%Y-%m-%d %H:%M:%S.%f')
+                    except ValueError:
+                        return jsonify({"error": "Invalid date format"}), 400
+                else:
+                    return jsonify({"error": "Invalid data format"}), 400
+            group_id = str(find_unique_group_id())
+            for item in data:
+                image_info = ImageInfo(group_id=group_id,
+                                       group_index=item["group_index"],
+                                       start_time=item["start_time"],
+                                       type=item["type"])
+                db.session.add(image_info)
+            db.session.commit()
+            return jsonify({"message": "Data received successfully", "data": data}), 200
+        else:
+            return jsonify({"error": "Expected a list of dictionaries"}), 400
+    else:
+        return jsonify({"error": "Request must be JSON"}), 400
 
 # 数据可视化页面
 @app.route("/image_data_timeline")
@@ -66,17 +109,6 @@ def data_visualize_pie():
     print(datas_json)
     return render_template("image_data_pie.html", data=Markup(datas_json))
 
-
-# 保存数据
-def save_data(data):
-    print(data)
-    st = datetime.now()
-    image_info = ImageInfo(group_id=data["group_id"],
-                           group_index=data["group_index"],
-                           start_time=st,
-                           type=data["type"])
-    db.session.add(image_info)
-    db.session.commit()
 
 
 

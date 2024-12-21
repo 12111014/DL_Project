@@ -1,153 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Group Data Visualization</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
-<style>
-  body, html {
-    height: 100%;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .top-bar {
-    position: relative;
-    top: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-  }
-  .chart-container {
-    width: 90%; /* Width is 100% of the container */
-    padding: 20px; /* Padding to avoid touching edges */
-  }
-  canvas {
-    width: 100% !important; /* Width is 100% of its container */
-    height: auto !important; /* Height is automatic */
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>Group Data Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(270deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+        }
+
+        .top-bar {
+            position: relative;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-container {
+            width: 90%;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        button, select {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            background-image: linear-gradient(to right, #0072ff, #00c6ff);
+            color: #ffffff;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:hover, select:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        select {
+            outline: none;
+        }
+    </style>
 </head>
 <body>
 <div class="top-bar">
-  <button class="back-button" onclick="window.location.href='/'">返回主页面</button>
-  <select id="groupSelect" class="group-select" onchange="updateChart()" disabled>
-    <option>Loading data...</option>
-  </select>
+    <button class="back-button" onclick="window.location.href='/'">返回主页面</button>
+    <select id="groupSelect" class="group-select" onchange="updateChart()">
+        <option>Loading data...</option>
+    </select>
 </div>
 <div class="chart-container">
-  <canvas id="myChart"></canvas>
+    <canvas id="myChart"></canvas>
 </div>
 <script>
-  // const data = [
-  //   // Empty data example
-  //   // Uncomment the following lines to see effect with actual data
-  //   {
-  //       "group_id": 0,
-  //       "group_index": 1,
-  //       "start_time": "2024-12-21 13:53:51.363183",
-  //       "type": "unhappy"
-  //   },
-  //   {
-  //       "group_id": 0,
-  //       "group_index": 2,
-  //       "start_time": "2024-12-21 13:58:35.459394",
-  //       "type": "happy"
-  //   }
-  // ];
-  const data = JSON.parse('{{ data }}');
+    const data = JSON.parse('{{ data }}');
+    const groupSelect = document.getElementById('groupSelect');
+    const ctx = document.getElementById('myChart').getContext('2d');
+    let myChart = null;
 
-  const groupSelect = document.getElementById('groupSelect');
-  const ctx = document.getElementById('myChart').getContext('2d');
-  let myChart = null;
-
-  function initSelect() {
-    const groups = [...new Set(data.map(item => item.group_id))];
-    groupSelect.innerHTML = ''; // Clear existing options
-    if (groups.length > 0) {
-      groups.forEach(group => {
-        const option = document.createElement('option');
-        option.value = group;
-        option.textContent = `Group ${group}`;
-        groupSelect.appendChild(option);
-      });
-      groupSelect.disabled = false;
-      updateChart();
-    } else {
-      const option = document.createElement('option');
-      option.textContent = 'No data available';
-      groupSelect.appendChild(option);
-      groupSelect.disabled = true;
-      if (myChart) {
-        myChart.destroy();
-      }
-    }
-  }
-
-  function updateChart() {
-    if (!groupSelect.disabled) {
-      const selectedGroup = parseInt(groupSelect.value);
-      const filteredData = data.filter(item => item.group_id === selectedGroup);
-      filteredData.sort((a, b) => a.group_index - b.group_index);
-      const labels = filteredData.map(item => new Date(item.start_time.replace(" ", "T")).toISOString());
-      const dataSet = {
-        labels: labels,
-        datasets: [{
-          label: 'Emotion Type',
-          data: filteredData.map(item => ({ x: new Date(item.start_time.replace(" ", "T")), y: item.type === "happy" ? 1 : 2 })),
-          borderColor: 'rgb(75, 192, 192)',
-          pointStyle: filteredData.map(item => item.type === "unhappy" ? 'triangle' : 'circle'),
-          pointRadius: 5,
-          pointBackgroundColor: filteredData.map(item => item.type === "unhappy" ? 'red' : 'blue'),
-        }]
-      };
-
-      if (myChart) {
-        myChart.destroy();
-      }
-
-      myChart = new Chart(ctx, {
-        type: 'line',
-        data: dataSet,
-        options: {
-          scales: {
-            x: {
-              type: 'time',
-              time: {
-                unit: 'second',
-                tooltipFormat: 'yyyy-MM-dd HH:mm:ss',
-                displayFormats: {
-                  second: 'HH:mm:ss'
-                }
-              },
-              ticks: {
-                autoSkip: true,
-                maxTicksLimit: 20
-              }
-            },
-            y: {
-              beginAtZero: false,
-              suggestedMin: 0.5, // Provides some space below the minimum
-              suggestedMax: 2.5, // Provides some space above the maximum
-              ticks: {
-                stepSize: 1,
-                callback: function(value) {
-                  if (value === 1) return "Happy";
-                  else if (value === 2) return "Unhappy";
-                }
-              }
+    function initSelect() {
+        const groups = [...new Set(data.map(item => item.group_id))];
+        groupSelect.innerHTML = '';
+        if (groups.length > 0) {
+            groups.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group;
+                option.textContent = `Group ${group}`;
+                groupSelect.appendChild(option);
+            });
+            groupSelect.disabled = false;
+            updateChart();
+        } else {
+            const option = document.createElement('option');
+            option.textContent = 'No data available';
+            groupSelect.appendChild(option);
+            groupSelect.disabled = true;
+            if (myChart) {
+                myChart.destroy();
             }
-          }
         }
-      });
     }
-  }
 
-  initSelect();
+    function updateChart() {
+        if (!groupSelect.disabled) {
+            const selectedGroup = parseInt(groupSelect.value);
+            const filteredData = data.filter(item => item.group_id === selectedGroup);
+            const types = [...new Set(filteredData.map(item => item.type))];
+            const typeColors = ['#0072ff', '#00c6ff', '#ff6347', '#90ee90', '#ffa500', '#ff00ff']; // Example colors
+            const typeColorMapping = types.reduce((acc, type, index) => {
+                acc[type] = typeColors[index % typeColors.length];
+                return acc;
+            }, {});
+
+            filteredData.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
+            const labels = filteredData.map(item => new Date(item.start_time.replace(" ", "T")).toISOString());
+            const dataSet = {
+                labels: labels,
+                datasets: [{
+                    label: 'Emotion Type',
+                    data: filteredData.map(item => ({
+                        x: new Date(item.start_time.replace(" ", "T")),
+                        y: types.indexOf(item.type) + 1
+                    })),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: filteredData.map(item => typeColorMapping[item.type]),
+                    pointStyle: 'circle',
+                    pointRadius: 5,
+                }]
+            };
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: dataSet,
+                options: {
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'millisecond',
+                                tooltipFormat: 'yyyy-MM-dd HH:mm:ss.SSS',
+                                displayFormats: {
+                                    millisecond: 'HH:mm:ss.SSS'
+                                }
+                            },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 20
+                            }
+                        },
+                        y: {
+                            beginAtZero: false,
+                            suggestedMin: 0.5, // Provides some space below the minimum
+                            suggestedMax: types.length + 0.5, // Adjust based on the number of types
+                            ticks: {
+                                stepSize: 1,
+                                callback: function (value) {
+                                    return types[value - 1] || '';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    initSelect();
 </script>
 </body>
 </html>
